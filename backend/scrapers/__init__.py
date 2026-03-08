@@ -1,1 +1,1 @@
-from backend.scrapers.article_scraper import ArticleScraper
+# Scrapers package - import modules directly when needed

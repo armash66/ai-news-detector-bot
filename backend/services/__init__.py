@@ -1,4 +1,2 @@
-from backend.services.claim_extractor import ClaimExtractor
-from backend.services.evidence_retriever import EvidenceRetriever
-from backend.services.explainability import ExplainabilityEngine
-from backend.services.analyzer import ArticleAnalyzer
+# Services package - import modules directly when needed
+# to avoid triggering heavy imports at package level

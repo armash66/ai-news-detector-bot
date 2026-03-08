@@ -6,7 +6,7 @@ import pytest
 from fastapi.testclient import TestClient
 from unittest.mock import patch, MagicMock
 
-from backend.api.main import create_app, _analyzer
+from backend.api.main import create_app
 from backend.services.analyzer import AnalysisReport
 
 
@@ -41,8 +41,7 @@ def client():
     mock_analyzer.analyze_url.return_value = mock_report
     mock_analyzer.verify_claim.return_value = mock_report
 
-    with patch("backend.api.routes.analyze.get_analyzer", return_value=mock_analyzer), \
-         patch("backend.api.routes.verify.get_analyzer", return_value=mock_analyzer):
+    with patch("backend.api.dependencies.get_analyzer", return_value=mock_analyzer):
         yield TestClient(app, raise_server_exceptions=False)
 
 

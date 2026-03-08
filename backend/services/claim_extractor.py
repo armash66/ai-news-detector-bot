@@ -27,10 +27,10 @@ try:
             "Install with: python -m spacy download en_core_web_sm"
         )
     HAS_SPACY = nlp is not None
-except ImportError:
+except Exception:
     HAS_SPACY = False
     nlp = None
-    logger.warning("spaCy not installed. Using regex-based sentence segmentation.")
+    logger.warning("spaCy unavailable. Using regex-based sentence segmentation.")
 
 
 @dataclass

@@ -249,7 +249,7 @@ class ExplainabilityEngine:
                 importances.append(TokenImportance(
                     token=token,
                     score=round(float(attn), 4),
-                    is_suspicious=float(attn) > np.mean(cls_attention) * 1.5,
+                    is_suspicious=bool(float(attn) > np.mean(cls_attention) * 1.5),
                 ))
 
             # Sort by attention score

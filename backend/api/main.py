@@ -6,36 +6,25 @@ and route registration.
 """
 
 from contextlib import asynccontextmanager
-from typing import Optional
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from backend.api.routes import analyze, verify, health
-from backend.services.analyzer import ArticleAnalyzer
-from backend.utils.config import settings
 from backend.utils.logger import get_logger
 
 logger = get_logger("api")
-
-# Global analyzer instance
-_analyzer: Optional[ArticleAnalyzer] = None
-
-
-def get_analyzer() -> ArticleAnalyzer:
-    """Get or create the global ArticleAnalyzer instance."""
-    global _analyzer
-    if _analyzer is None:
-        _analyzer = ArticleAnalyzer()
-    return _analyzer
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application lifecycle manager. Initializes models on startup."""
     logger.info("VeritasAI API starting up...")
-    global _analyzer
-    _analyzer = ArticleAnalyzer()
+
+    from backend.api.dependencies import set_analyzer
+    from backend.services.analyzer import ArticleAnalyzer
+
+    analyzer = ArticleAnalyzer()
+    set_analyzer(analyzer)
     logger.info("All models loaded and ready")
     yield
     logger.info("VeritasAI API shutting down...")
@@ -65,7 +54,9 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
 
-    # Register routes
+    # Register routes (imported here to avoid circular imports)
+    from backend.api.routes import analyze, verify, health
+
     app.include_router(health.router, tags=["Health"])
     app.include_router(analyze.router, prefix="/api/v1", tags=["Analysis"])
     app.include_router(verify.router, prefix="/api/v1", tags=["Verification"])

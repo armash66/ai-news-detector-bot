@@ -10,7 +10,7 @@ from typing import Optional
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field, HttpUrl
 
-from backend.api.main import get_analyzer
+from backend.api.dependencies import get_analyzer
 from backend.utils.logger import get_logger
 
 logger = get_logger("routes.analyze")
