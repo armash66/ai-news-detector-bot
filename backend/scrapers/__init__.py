@@ -1,0 +1,1 @@
+from backend.scrapers.article_scraper import ArticleScraper
