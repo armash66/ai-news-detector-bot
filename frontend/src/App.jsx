@@ -55,7 +55,7 @@ function Sidebar({ activeTab, setActiveTab }) {
     <nav className="saas-sidebar glass fade-in">
       <div className="sidebar-brand">
         <Activity color="var(--accent-cyan)" size={28} />
-        <h1 className="logo-display" style={{fontSize: '1.4rem'}}>VeritasAI</h1>
+        <h1 className="logo-display" style={{fontSize: '1.2rem'}}>News Intelligence</h1>
       </div>
       <ul className="sidebar-menu">
         {menus.map(m => (
@@ -81,20 +81,33 @@ function Sidebar({ activeTab, setActiveTab }) {
 // ANALYZE VIEW
 // ────────────────────────────────────────────────────────────────────────
 function AnalyzeView() {
-  const [inputType, setInputType] = useState('text'); // 'text' or 'url'
+  const [inputType, setInputType] = useState('text'); // 'text', 'url', 'image'
   const [inputValue, setInputValue] = useState('');
+  const [selectedFile, setSelectedFile] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [report, setReport] = useState(null);
 
   const handleAnalyze = async () => {
-    if (!inputValue.trim()) return;
+    if (inputType !== 'image' && !inputValue.trim()) return;
+    if (inputType === 'image' && !selectedFile) return;
+    
     setLoading(true); setError(null); setReport(null);
     try {
-      const endpoint = inputType === 'url' ? '/api/v1/analyze-url' : '/api/v1/analyze';
-      const payload = inputType === 'url' ? { url: inputValue } : { text: inputValue };
-      const response = await axios.post(endpoint, payload);
-      setReport(response.data);
+      if (inputType === 'image') {
+        const formData = new FormData();
+        formData.append('file', selectedFile);
+        
+        const response = await axios.post('/api/v1/analyze-image', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
+        setReport(response.data);
+      } else {
+        const endpoint = inputType === 'url' ? '/api/v1/analyze-url' : '/api/v1/analyze';
+        const payload = inputType === 'url' ? { url: inputValue } : { text: inputValue };
+        const response = await axios.post(endpoint, payload);
+        setReport(response.data);
+      }
     } catch (err) {
       setError(err.response?.data?.detail || err.message || 'An error occurred during analysis');
     } finally {
@@ -142,15 +155,20 @@ function AnalyzeView() {
           <button className={inputType === 'url' ? 'active' : ''} onClick={() => setInputType('url')}>
             <LinkIcon size={16} /> Article URL
           </button>
+          <button className={inputType === 'image' ? 'active' : ''} onClick={() => setInputType('image')}>
+            <ImageIcon size={16} /> OCR Image Scan
+          </button>
         </div>
 
-        {inputType === 'text' ? (
+        {inputType === 'text' && (
           <textarea 
             placeholder="Paste text here... (min 20 chars)"
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
           />
-        ) : (
+        )}
+        
+        {inputType === 'url' && (
           <input 
             type="text" 
             placeholder="https://example.com/article"
@@ -159,7 +177,27 @@ function AnalyzeView() {
           />
         )}
 
-        <button className="btn-primary" onClick={handleAnalyze} disabled={loading || inputValue.length < 5}>
+        {inputType === 'image' && (
+          <div style={{border: '2px dashed var(--border-color)', padding: '2rem', textAlign: 'center', borderRadius: '8px'}}>
+            <input 
+              type="file" 
+              accept="image/*"
+              onChange={(e) => setSelectedFile(e.target.files[0])}
+              style={{display: 'none'}}
+              id="file-upload"
+            />
+            <label htmlFor="file-upload" className="btn-primary" style={{display: 'inline-block', cursor: 'pointer', width: 'auto'}}>
+              {selectedFile ? selectedFile.name : "Select Image for OCR Scanning"}
+            </label>
+            <p style={{marginTop: '1rem', color: 'var(--text-secondary)'}}>Upload a screenshot of a Tweet, Article, or post to extract text and analyze.</p>
+          </div>
+        )}
+
+        <button 
+           className="btn-primary" 
+           onClick={handleAnalyze} 
+           disabled={loading || (inputType === 'image' ? !selectedFile : inputValue.length < 5)}
+        >
           {loading ? <Loader2 className="loader" size={24} /> : 'Run Transformer Model Pipeline'}
         </button>
         {error && <div className="error-box"><strong>Error:</strong> {error}</div>}
@@ -174,8 +212,8 @@ function AnalyzeView() {
         )}
         {loading && (
            <div className="glass score-card">
-             <Loader2 className="loader slide-up" size={48} color="var(--accent-cyan)" style={{ margin: '0 auto 1rem' }} />
-             <h3 className="verdict" style={{ color: 'var(--accent-cyan)' }}>Corroborating Evidence...</h3>
+             <Loader2 className="loader slide-up" size={48} color="var(--accent-blue)" style={{ margin: '0 auto 1rem' }} />
+             <h3 className="verdict" style={{ color: 'var(--accent-blue)' }}>Extracting & Verifying Evidence...</h3>
            </div>
         )}
         {report && !loading && (
