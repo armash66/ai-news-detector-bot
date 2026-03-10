@@ -1,4 +1,4 @@
-# VeritasAI Model Training / Fine-tuning Guide
+# AI News Intelligence Model Training / Fine-tuning Guide
 
 The backend includes a comprehensive training module to allow you to fine-tune standard Language Models (like `roberta-base` or `bert-base`) on your own custom datasets (like ISOT, FakeNewsNet, or LIAR).
 

@@ -15,11 +15,11 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 
 @bot.event
 async def on_ready():
-    print(f"Logged in as {bot.user} - VeritasAI Verification Bot")
+    print(f"Logged in as {bot.user} - News Intelligence Bot")
 
 @bot.command(name="verify")
 async def verify(ctx, *, text: str):
-    """Verify a news snippet or claim using the VeritasAI API."""
+    """Verify a news snippet or claim using the APIs."""
     if len(text) < 20:
         await ctx.send("Please provide at least 20 characters of text to analyze.")
         return
@@ -48,7 +48,7 @@ async def verify(ctx, *, text: str):
                 icon = "🔴"
 
             embed = discord.Embed(
-                title=f"{icon} VeritasAI Analysis Report", 
+                title=f"{icon} Analysis Report", 
                 description=f"**Verdict:** {verdict}\n**Credibility Score:** {score:.1f}%",
                 color=color
             )
@@ -65,7 +65,7 @@ async def verify(ctx, *, text: str):
             await msg.edit(content=f"❌ Failed to reach the analysis engine: {response.text}")
             
     except Exception as e:
-        await msg.edit(content=f"❌ An error occurred connecting to VeritasAI: {str(e)}")
+        await msg.edit(content=f"❌ An error occurred connecting to the API: {str(e)}")
 
 
 if __name__ == "__main__":

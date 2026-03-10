@@ -11,9 +11,9 @@ router = APIRouter()
 async def health_check():
     """Basic health check."""
     return {
-        "status": "healthy",
-        "service": "VeritasAI Misinformation Detection Platform",
-        "version": "1.0.0",
+        "status": "up",
+        "service": "News Intelligence Misinformation Detection Platform",
+        "environment": "production",
     }
 
 

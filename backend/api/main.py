@@ -1,7 +1,7 @@
 """
 FastAPI application entry point.
 
-Creates the VeritasAI API server with CORS, lifecycle management,
+Creates the API server with CORS, lifecycle management,
 and route registration.
 """
 
@@ -18,7 +18,7 @@ logger = get_logger("api")
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application lifecycle manager. Initializes models on startup."""
-    logger.info("VeritasAI API starting up...")
+    logger.info("API starting up...")
 
     from backend.api.dependencies import set_analyzer
     from backend.services.analyzer import ArticleAnalyzer
@@ -49,13 +49,13 @@ async def lifespan(app: FastAPI):
 
     logger.info("All modular services loaded and ready")
     yield
-    logger.info("VeritasAI API shutting down...")
+    logger.info("API shutting down...")
 
 
 def create_app() -> FastAPI:
     """Create and configure the FastAPI application."""
     app = FastAPI(
-        title="VeritasAI - Misinformation Detection Platform",
+        title="News Intelligence - Misinformation Detection Platform",
         description=(
             "Production-grade AI-powered fact-checking and misinformation detection API. "
             "Analyzes articles, verifies claims, and provides credibility reports "

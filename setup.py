@@ -1,11 +1,11 @@
 """
-VeritasAI - Misinformation Detection Platform
+AI News Intelligence - Misinformation Detection Platform
 """
 
 from setuptools import setup, find_packages
 
 setup(
-    name="veritas-ai",
+    name="news-intelligence",
     version="1.0.0",
     description="Production-grade AI-powered misinformation detection platform",
     author="Armash Ansari",
@@ -40,8 +40,8 @@ setup(
     },
     entry_points={
         "console_scripts": [
-            "veritas-train=backend.training.train:main",
-            "veritas-eval=backend.training.evaluate:main",
+            "news-train=backend.training.train:main",
+            "news-eval=backend.training.evaluate:main",
         ],
     },
 )

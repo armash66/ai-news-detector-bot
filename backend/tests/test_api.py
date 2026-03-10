@@ -56,7 +56,7 @@ class TestHealthEndpoint:
         response = client.get("/")
         assert response.status_code == 200
         data = response.json()
-        assert "VeritasAI" in data["service"]
+        assert "News Intelligence" in data["service"]
 
 
 class TestAnalyzeEndpoint:

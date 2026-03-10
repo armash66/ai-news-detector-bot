@@ -1,5 +1,5 @@
 # ==============================================================================
-# VeritasAI - Misinformation Detection Platform
+# News Intelligence - Misinformation Detection Platform
 # ==============================================================================
 
 # --- Core ML / NLP ---
