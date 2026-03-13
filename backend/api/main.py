@@ -29,9 +29,10 @@ def create_app() -> FastAPI:
         return {"status": "operational", "service": "TruthLens Gateway"}
         
     # Bind Core Routers
-    from backend.api.routes import analyze, feed
+    from backend.api.routes import analyze, feed, campaigns
     app.include_router(analyze.router, prefix=f"{settings.API_V1_STR}/analyze", tags=["Intelligence Engine"])
     app.include_router(feed.router, prefix=f"{settings.API_V1_STR}/feed", tags=["Global Intel Feeds"])
+    app.include_router(campaigns.router, prefix=f"{settings.API_V1_STR}/campaigns", tags=["Bot Networks"])
         
     return app
 

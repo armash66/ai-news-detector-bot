@@ -1,1 +1,1 @@
-from backend.api.routes import analyze, feed
+from backend.api.routes import analyze, feed, campaigns
