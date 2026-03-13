@@ -16,8 +16,8 @@ class Settings(BaseSettings):
     def SQLALCHEMY_DATABASE_URI(self) -> str:
         return f"postgresql://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_SERVER}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
         
-    # Optional DB fall back for prototyping
-    USE_SQLITE_FALLBACK: bool = True
-    SQLITE_URL: str = "sqlite:///./truthlens_local_test.db"
+    # Database Mode
+    USE_SQLITE_FALLBACK: bool = True # SQLite enabled for development (Docker not found)
+    SQLITE_URL: str = "sqlite:///./truthlens_local.db"
 
 settings = Settings()

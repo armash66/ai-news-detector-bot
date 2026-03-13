@@ -1,13 +1,23 @@
-from sqlalchemy import Column, String, Text, Float, DateTime, ForeignKey, JSON
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import Column, String, Text, Float, DateTime, ForeignKey, JSON, Boolean
+from sqlalchemy.orm import relationship
 import uuid
 from datetime import datetime, timezone
 from backend.core.database import Base
+
+class Narrative(Base):
+    __tablename__ = "narratives"
+    
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    topic = Column(String(255), nullable=False)
+    description = Column(Text)
+    origin_source = Column(String(255))
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
 class Article(Base):
     __tablename__ = "articles"
 
     id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    narrative_id = Column(String(36), ForeignKey("narratives.id"), nullable=True)
     source_domain = Column(String(255), index=True)
     title = Column(Text, nullable=False)
     content = Column(Text, nullable=False)
@@ -16,6 +26,16 @@ class Article(Base):
     author = Column(String(255), nullable=True)
     credibility_score = Column(Float, nullable=True)
     
+class SourceCredibility(Base):
+    __tablename__ = "source_credibility"
+    
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    domain = Column(String(255), unique=True, index=True)
+    reliability_score = Column(Float) # 0 to 1
+    bias_rating = Column(String(50)) # Left, Right, Center, etc.
+    verified_status = Column(Boolean, default=False)
+    last_audit = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
 class Claim(Base):
     __tablename__ = "claims"
 
