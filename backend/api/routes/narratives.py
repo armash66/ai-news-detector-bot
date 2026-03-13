@@ -1,49 +1,71 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
+from sqlalchemy import func
+from backend.core.database import get_db
+from backend.models.domain import Article, Narrative
 import datetime
-import random
 
 router = APIRouter()
 
 @router.get("/clusters")
-async def get_narrative_clusters():
+async def get_narrative_clusters(db: Session = Depends(get_db)):
     """
-    Returns high-level narrative clusters identified by the VLM and semantic analysis.
-    In production, this would use UMAP/HDBSCAN on sentence embeddings from the news feed.
+    Returns real narrative clusters identified during global OSINT ingestion.
     """
-    clusters = [
-        {
-            "id": "narr_1",
-            "topic": "Coordinated Energy Crisis Narratives",
-            "volume": 1240,
-            "growth": 14.5,
-            "dominant_sentiment": "Fear",
-            "sources": ["Social Media", "Alternative News", "Telegram"],
-            "verification_status": "Highly Manipulated",
-            "last_active": (datetime.datetime.now() - datetime.timedelta(minutes=5)).isoformat()
-        },
-        {
-            "topic": "Central Bank Digital Currency Propaganda",
-            "volume": 850,
-            "growth": -5.2,
-            "dominant_sentiment": "Distrust",
-            "sources": ["Global News", "X (Twitter)"],
-            "verification_status": "Mixed/Organic",
-            "last_active": (datetime.datetime.now() - datetime.timedelta(minutes=12)).isoformat()
-        },
-        {
-            "topic": "AI Regulation Misinformation",
-            "volume": 2100,
-            "growth": 32.1,
-            "dominant_sentiment": "Alarmism",
-            "sources": ["Substack", "YouTube", "Mainstream Media"],
-            "verification_status": "Bot Amplified",
-            "last_active": (datetime.datetime.now() - datetime.timedelta(minutes=2)).isoformat()
+    try:
+        # Fetch all narratives
+        narratives = db.query(Narrative).all()
+        
+        clusters = []
+        for narr in narratives:
+            # Count articles in this narrative
+            count = db.query(func.count(Article.id)).filter(Article.narrative_id == narr.id).scalar()
+            
+            # Simulated sentiment and verification for prototype
+            clusters.append({
+                "id": narr.id,
+                "topic": narr.topic,
+                "volume": count,
+                "growth": 5.0, # Placeholder growth
+                "dominant_sentiment": "Alert" if count > 5 else "Neutral",
+                "sources": [narr.origin_source],
+                "verification_status": "Bot Amplified" if count > 8 else "Pending Investigation",
+                "last_active": narr.created_at.isoformat()
+            })
+            
+        return {
+            "status": "success",
+            "timestamp": datetime.datetime.now().isoformat(),
+            "total_active_narratives": len(clusters),
+            "data": clusters
         }
-    ]
-    
-    return {
-        "status": "success",
-        "timestamp": datetime.datetime.now().isoformat(),
-        "total_active_narratives": len(clusters),
-        "data": clusters
-    }
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+@router.get("/{narrative_id}/tree")
+async def get_narrative_tree(narrative_id: str, db: Session = Depends(get_db)):
+    """
+    Returns the publication sequence for a narrative to visualize origin and propagation.
+    """
+    try:
+        articles = db.query(Article).filter(Article.narrative_id == narrative_id).order_by(Article.published_at.asc()).all()
+        
+        sequence = []
+        for i, art in enumerate(articles):
+            sequence.append({
+                "id": art.id,
+                "title": art.title,
+                "source": art.source_domain,
+                "timestamp": art.published_at.isoformat(),
+                "node_type": "Origin" if i == 0 else "Propagation",
+                # Simulate a 'parent' link for the tree structure
+                "parent_id": articles[max(0, i-1)].id if i > 0 else None
+            })
+            
+        return {
+            "status": "success",
+            "narrative_id": narrative_id,
+            "nodes": sequence
+        }
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
