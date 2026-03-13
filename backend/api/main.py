@@ -33,6 +33,7 @@ def create_app() -> FastAPI:
     app.include_router(analyze.router, prefix=f"{settings.API_V1_STR}/analyze", tags=["Intelligence Engine"])
     app.include_router(feed.router, prefix=f"{settings.API_V1_STR}/feed", tags=["Global Intel Feeds"])
     app.include_router(campaigns.router, prefix=f"{settings.API_V1_STR}/campaigns", tags=["Bot Networks"])
+    app.include_router(narratives.router, prefix=f"{settings.API_V1_STR}/narratives", tags=["Narrative Analysis"])
         
     return app
 
