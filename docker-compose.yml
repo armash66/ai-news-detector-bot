@@ -1,0 +1,104 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: truthlens_db
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-truthlens_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-truthlens_password}
+      POSTGRES_DB: ${POSTGRES_DB:-truthlens}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-truthlens_user} -d ${POSTGRES_DB:-truthlens}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - truthlens_net
+
+  redis:
+    image: redis:7-alpine
+    container_name: truthlens_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - truthlens_net
+
+  api:
+    build: .
+    container_name: truthlens_api
+    command: uvicorn src.main:app --host 0.0.0.0 --port 8000
+    volumes:
+      - ./src:/app/src
+    ports:
+      - "8000:8000"
+    environment:
+      - POSTGRES_HOST=db
+      - REDIS_HOST=redis
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - truthlens_net
+
+  ingestion_worker:
+    build: .
+    container_name: truthlens_ingestion
+    command: python -m src.workers.ingestion_worker
+    volumes:
+      - ./src:/app/src
+    environment:
+      - POSTGRES_HOST=db
+      - REDIS_HOST=redis
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - truthlens_net
+
+  nlp_worker_1:
+    build: .
+    container_name: truthlens_nlp_1
+    command: python -m src.workers.nlp_worker
+    volumes:
+      - ./src:/app/src
+    environment:
+      - POSTGRES_HOST=db
+      - REDIS_HOST=redis
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    deploy:
+      resources:
+        reservations:
+          memory: 2G
+    networks:
+      - truthlens_net
+
+  # Scale NLP workers by adding more or using docker-compose --scale nlp_worker=3
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  truthlens_net:
+    driver: bridge
