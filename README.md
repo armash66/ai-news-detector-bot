@@ -7,7 +7,7 @@ While fake news detection is supported as an auxiliary subsystem, **TruthLens is
 
 ---
 
-## 🏗️ System Architecture
+## System Architecture
 
 The overarching system is designed as a scalable, event-driven microservices architecture relying on asynchronous queues and dedicated worker processes.
 
@@ -55,7 +55,7 @@ graph TD
 
 ---
 
-## ⚡ Core Capabilities
+## Core Capabilities
 
 ### 1. Autonomous Event Clustering
 Instead of serving raw articles, TruthLens computes high-dimensional **Sentence-BERT** embeddings for incoming texts and projects them into vector space. Articles clustering near existing centroids are assigned to ongoing events. Density anomalies trigger the creation of entirely new events.
@@ -71,7 +71,7 @@ Built on **Redis Streams**, the gap between high-velocity ingestion and slow NLP
 
 ---
 
-## 🛤️ Data Processing Pipeline
+## Data Processing Pipeline
 
 When raw strings enter the platform, they undergo a rigorous 7-stage extraction process before being indexed.
 
@@ -104,7 +104,7 @@ sequenceDiagram
     deactivate A
 ```
 
-## 🧩 Event Lifecycle & Database Schema
+## Event Lifecycle & Database Schema
 
 TruthLens normalizes data heavily around the `Event` object, linking `Source`, `ProcessedArticle`, and `TimelineEntry` objects across junction tables.
 
@@ -148,7 +148,7 @@ erDiagram
     EVENT ||--o{ TIMELINE_ENTRY : "evolves through"
 ```
 
-## 🔍 The Event Merging Algorithm
+## The Event Merging Algorithm
 
 Real-world narratives merge and split dynamically. The `EventMerger` daemon continuously runs K-Means and Silhouette assessments on active clusters:
 
@@ -195,7 +195,7 @@ Frontend clients and API consumers receive deeply enriched intelligence payloads
 
 ---
 
-## 🛠️ Technology Stack
+## Technology Stack
 
 | Layer | Technology | Purpose |
 |-------|------------|---------|
@@ -208,7 +208,7 @@ Frontend clients and API consumers receive deeply enriched intelligence payloads
 
 ---
 
-## 🚀 Getting Started
+## Getting Started
 
 Deploying the local development stack requires no manual dependency management, relying purely on the included operational docker configuration.
 
@@ -253,7 +253,7 @@ Deploying the local development stack requires no manual dependency management, 
 
 ---
 
-## 🔮 Future Expansion Vectors
+## Future Expansion Vectors
 
 * **Knowledge Graph Ingestion**: Export entity interactions natively into Neo4j objects to query complex relations extending temporally beyond singular events.
 * **Early Signal Degradation**: Execute stochastic modeling across untrusted social feeds to catch micro-narratives before they reach major organizational coverage thresholds.
@@ -262,6 +262,6 @@ Deploying the local development stack requires no manual dependency management, 
 
 ---
 
-## 🛡️ License
+## License
 
 TruthLens source is provided as-is under the standard MIT software distribution license.
