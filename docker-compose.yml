@@ -23,11 +23,10 @@ services:
       - "6379:6379"
 
   api:
-    build: .
+    build: ./backend
     command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
     volumes:
-      - .:/app
-      - /app/truthlens-ui
+      - ./backend:/app
       - /app/.venv
       - /app/.git
     ports:
@@ -42,10 +41,10 @@ services:
         condition: service_started
 
   ingestion_worker:
-    build: .
+    build: ./backend
     command: python -m workers.ingestion_worker
     volumes:
-      - .:/app
+      - ./backend:/app
     environment:
       - DATABASE_URL=postgresql://truthlens:password@db:5432/truthlens
       - REDIS_URL=redis://redis:6379/0
@@ -54,10 +53,10 @@ services:
       - redis
 
   nlp_worker:
-    build: .
+    build: ./backend
     command: python -m workers.nlp_worker
     volumes:
-      - .:/app
+      - ./backend:/app
     environment:
       - DATABASE_URL=postgresql://truthlens:password@db:5432/truthlens
       - REDIS_URL=redis://redis:6379/0
