@@ -1,10 +1,10 @@
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { Sidebar } from './components/Sidebar';
-import { Home } from './pages/Home';
-import { Intelligence } from './pages/Intelligence';
-import { Alerts } from './pages/Alerts';
-import { Briefing } from './pages/Briefing';
+import { Home } from './pages/Home.tsx';
+import { Intelligence } from './pages/Intelligence.tsx';
+import { Alerts } from './pages/Alerts.tsx';
+import { Briefing } from './pages/Briefing.tsx';
 
 const Analytics = () => <div className="scrollarea"><h2>Analytics</h2></div>;
 

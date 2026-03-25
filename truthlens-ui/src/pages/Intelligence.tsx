@@ -1,7 +1,31 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Search, AlertTriangle } from 'lucide-react';
+import { api, EventResponse } from '../api';
+import { formatDistanceToNow } from 'date-fns';
+import { Link } from 'react-router-dom';
 
 export const Intelligence: React.FC = () => {
+  const [query, setQuery] = useState('');
+  const [results, setResults] = useState<EventResponse[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [hasSearched, setHasSearched] = useState(false);
+
+  const handleSearch = async (e: React.FormEvent) => {
+      e.preventDefault();
+      if (!query.trim()) return;
+      
+      setLoading(true);
+      setHasSearched(true);
+      try {
+          const data = await api.search(query);
+          setResults(data);
+      } catch (err) {
+          console.error("Search failed:", err);
+      } finally {
+          setLoading(false);
+      }
+  };
+
   return (
     <div className="scrollarea">
        {/* Top Bar for Intelligence */}
@@ -10,10 +34,12 @@ export const Intelligence: React.FC = () => {
           Intelligence Search
         </h1>
         <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-            <div style={{ position: 'relative' }}>
+            <form onSubmit={handleSearch} style={{ position: 'relative' }}>
                 <Search size={18} style={{ position: 'absolute', left: '12px', top: '10px', color: 'var(--text-tertiary)' }} />
                 <input 
                     type="text" 
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
                     placeholder="Search global news events, entities, or intelligence reports..." 
                     style={{
                         padding: '0.625rem 1rem 0.625rem 2.5rem', 
@@ -25,8 +51,7 @@ export const Intelligence: React.FC = () => {
                         fontSize: '0.875rem'
                     }}
                 />
-            </div>
-            
+            </form>
         </div>
       </div>
 
@@ -98,48 +123,40 @@ export const Intelligence: React.FC = () => {
                       Sort by: <select style={{ border: 'none', backgroundColor: 'transparent', fontWeight: 600 }}><option>Significance</option><option>Recent</option><option>Credibility</option></select>
                   </div>
               </div>
-              <p className="text-secondary text-small" style={{ marginBottom: '1rem' }}>Showing 128 intelligence events matching your current filters.</p>
+              <p className="text-secondary text-small" style={{ marginBottom: '1rem' }}>
+                  {hasSearched ? `Showing ${results.length} intelligence events matching your query.` : `Enter a query above to search global intelligence.`}
+              </p>
+
+              {loading && <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-secondary)' }}>Querying intelligence database...</div>}
 
               {/* Result Cards */}
-              <div className="card flex gap-4" style={{ padding: '1rem' }}>
-                  <div style={{ width: '180px', height: '140px', backgroundColor: 'var(--bg-app)', borderRadius: '8px', flexShrink: 0 }}></div>
-                  <div className="flex-col justify-between w-full">
-                      <div>
-                          <div className="flex items-center gap-2 mb-2" style={{ marginBottom: '0.5rem' }}>
-                              <span className="badge badge-success">HIGH CREDIBILITY</span>
-                              <span className="text-small">24 mins ago</span>
+              {!loading && results.map(ev => {
+                  return (
+                      <div key={ev.id} className="card flex gap-4" style={{ padding: '1rem' }}>
+                          <div style={{ width: '180px', height: '140px', backgroundColor: 'var(--bg-app)', borderRadius: '8px', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-tertiary)', fontSize: '0.75rem' }}>{ev.category}</div>
+                          <div className="flex-col justify-between w-full">
+                              <div>
+                                  <div className="flex items-center gap-2 mb-2" style={{ marginBottom: '0.5rem' }}>
+                                      <span className={ev.trust_score > 0.8 ? "badge badge-success" : "badge badge-warning"}>
+                                          {ev.trust_score > 0.8 ? "HIGH CREDIBILITY" : "MODERATE CREDIBILITY"}
+                                      </span>
+                                      <span className="text-small">{formatDistanceToNow(new Date(ev.first_seen_at), {addSuffix: true})}</span>
+                                  </div>
+                                  <Link to={`/briefing?id=${ev.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+                                      <h3 style={{ marginBottom: '0.5rem', fontSize: '1.125rem' }}>{ev.title}</h3>
+                                  </Link>
+                                  <p className="text-small text-secondary" style={{ overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
+                                      {ev.summary || "Summary pending generation."}
+                                  </p>
+                              </div>
+                              <div className="flex items-center gap-2 text-small" style={{ marginTop: '1rem' }}>
+                                  <span style={{ fontWeight: 600 }}>Reports from {ev.source_count} unique tracked sources</span>
+                              </div>
                           </div>
-                          <h3 style={{ marginBottom: '0.5rem', fontSize: '1.125rem' }}>Global Semiconductor Supply Chain Stabilizes Amid New Trade Agreements</h3>
-                          <p className="text-small text-secondary" style={{ overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
-                              Intelligence indicates a 15% reduction in lead times across South East Asian manufacturing hubs following recent bilateral logistics accords between TSMC and regional governments.
-                          </p>
                       </div>
-                      <div className="flex items-center gap-2 text-small" style={{ marginTop: '1rem' }}>
-                          <span style={{ fontWeight: 600 }}>Reports from Reuters, Bloomberg, and Nikkei</span>
-                      </div>
-                  </div>
-              </div>
-
-               <div className="card flex gap-4" style={{ padding: '1rem' }}>
-                  <div style={{ width: '180px', height: '140px', backgroundColor: 'var(--bg-app)', borderRadius: '8px', flexShrink: 0 }}></div>
-                  <div className="flex-col justify-between w-full">
-                      <div>
-                          <div className="flex items-center gap-2 mb-2" style={{ marginBottom: '0.5rem' }}>
-                              <span className="badge badge-warning">DEVELOPING RISK</span>
-                              <span className="text-small">2 hours ago</span>
-                          </div>
-                          <h3 style={{ marginBottom: '0.5rem', fontSize: '1.125rem' }}>Central European Power Grid Faces Critical Strain Due to Maintenance Overlap</h3>
-                          <p className="text-small text-secondary" style={{ overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
-                              Scheduled maintenance in Germany and unexpected outages in France create a 2.4GW deficit, driving spot prices to 6-month highs. Secondary manufacturers slowing production.
-                          </p>
-                      </div>
-                      <div className="flex items-center gap-2 text-small" style={{ marginTop: '1rem' }}>
-                          <span style={{ fontWeight: 600 }}>Verified by Grid Monitor & Reuters</span>
-                      </div>
-                  </div>
-              </div>
+                  );
+              })}
               
-              <button className="btn btn-secondary" style={{ alignSelf: 'center', marginTop: '1rem' }}>Load More Intelligence Events</button>
           </div>
       </div>
     </div>

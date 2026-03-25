@@ -1,7 +1,26 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Settings, SlidersHorizontal, Activity } from 'lucide-react';
+import { api, AlertResponse } from '../api';
+import { formatDistanceToNow } from 'date-fns';
 
 export const Alerts: React.FC = () => {
+  const [alerts, setAlerts] = useState<AlertResponse[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchAlerts = async () => {
+      try {
+        const data = await api.getAlerts(20);
+        setAlerts(data);
+      } catch (err) {
+        console.error("Failed to load alerts:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchAlerts();
+  }, []);
+
   return (
     <div className="scrollarea">
        {/* Top Bar for Alerts */}
@@ -28,74 +47,47 @@ export const Alerts: React.FC = () => {
           {/* Main Alerts List */}
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
              
-             {/* Critical Risk Alert */}
-             <div className="card" style={{ borderLeft: '4px solid var(--status-critical)' }}>
-                 <div className="flex items-center justify-between" style={{ marginBottom: '1rem' }}>
-                     <div className="flex items-center gap-2">
-                        <span className="badge badge-breaking">! RISK</span>
-                        <span className="text-small">12 mins ago</span>
-                     </div>
-                     <Settings size={16} color="var(--text-tertiary)"/>
-                 </div>
-                 
-                 <h3 style={{ fontSize: '1.25rem', marginBottom: '0.75rem' }}>Semiconductor Export Restrictions: Tier 1 Regulatory Shift</h3>
-                 <p className="text-secondary" style={{ marginBottom: '1.5rem' }}>New regulatory framework announced affecting 45% of current supply chain routes in Southeast Asia. Immediate impact expected on high-end chip logistics.</p>
-                 
-                 <div className="flex items-center gap-2 text-small">
-                     <div style={{ width: '24px', height: '24px', borderRadius: '50%', backgroundColor: 'var(--text-secondary)' }}></div>
-                     <span style={{ fontWeight: 600 }}>Analysis by Macro Unit &rarr; Artificial Intelligence</span>
-                 </div>
-             </div>
-
-             {/* Update Alert */}
-             <div className="card" style={{ borderLeft: '4px solid var(--status-info)' }}>
-                 <div className="flex items-center justify-between" style={{ marginBottom: '1rem' }}>
-                     <div className="flex items-center gap-2">
-                        <span className="badge" style={{ backgroundColor: 'transparent', color: 'var(--status-info)', border: '1px solid var(--border-light)' }}>UPDATE</span>
-                        <span className="text-small">2 hours ago</span>
-                     </div>
-                 </div>
-                 
-                 <h3 style={{ fontSize: '1.125rem', marginBottom: '0.75rem' }}>Central Bank Quarterly Sentiment: Neutral Shift</h3>
-                 <p className="text-secondary" style={{ marginBottom: '0.5rem' }}>The latest minutes indicate a move from 'Hawkish' to 'Neutral-Wait', signaling a pause in rate escalations for Q4.</p>
-             </div>
-
-             {/* New Alert with Image placeholder */}
-             <div className="card" style={{ borderLeft: '4px solid var(--primary)' }}>
-                 <div className="flex justify-between">
-                     <div style={{ flex: 1 }}>
-                        <div className="flex items-center gap-2" style={{ marginBottom: '1rem' }}>
-                            <span className="badge" style={{ backgroundColor: 'var(--primary-light)', color: 'var(--primary)' }}>NEW</span>
-                            <span className="text-small">4 hours ago</span>
-                        </div>
-                        
-                        <h3 style={{ fontSize: '1.125rem', marginBottom: '0.75rem' }}>Green Hydrogen Initiative: €2.4B Expansion</h3>
-                        <p className="text-secondary" style={{ marginBottom: '0.5rem', maxWidth: '85%' }}>European consortium announces massive investment in North Sea wind-to-hydrogen pipelines. Key players include Orsted and Shell.</p>
-                     </div>
-                     <div style={{ width: '120px', height: '80px', backgroundColor: 'var(--bg-app)', borderRadius: '6px', alignSelf: 'center' }}></div>
-                 </div>
-             </div>
-
-             {/* Critical Trend Alert */}
-             <div className="card" style={{ borderLeft: '4px solid var(--status-critical)' }}>
-                 <div className="flex items-center justify-between" style={{ marginBottom: '1rem' }}>
-                     <div className="flex items-center gap-2">
-                        <span className="badge badge-breaking">! CRITICAL</span>
-                        <span className="text-small">6 hours ago</span>
-                     </div>
-                 </div>
-                 
-                 <h3 style={{ fontSize: '1.125rem', marginBottom: '0.75rem' }}>Port Congestion Indices Hit 12-Month High</h3>
-                 <p className="text-secondary" style={{ marginBottom: '1.5rem' }}>Significant delays reported at major logistics hubs. Global trade velocity dropped by 3.2% in the last 48 hours.</p>
-                 
-                 <div style={{ padding: '1rem', backgroundColor: 'var(--bg-app)', borderRadius: '6px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                     <div className="flex items-center gap-2" style={{ fontSize: '0.875rem', fontWeight: 600 }}>
-                         <Activity size={16} color="var(--status-critical)" /> Trend: High Volatility Expected
-                     </div>
-                     <span style={{ color: 'var(--status-critical)', fontWeight: 700, fontSize: '0.875rem' }}>+18.5% YoY</span>
-                 </div>
-             </div>
+             {loading && <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-secondary)' }}>Scanning alert streams...</div>}
              
+             {!loading && alerts.length === 0 && (
+                 <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-secondary)' }}>No priority alerts currently active. Thresholds nominal.</div>
+             )}
+
+             {!loading && alerts.map(alert => {
+                 const isCritical = alert.severity === 'CRITICAL';
+                 const isWarning = alert.severity === 'WARNING';
+                 let borderColor = 'var(--primary)';
+                 let badgeClass = 'badge-analysis';
+                 
+                 if (isCritical) {
+                     borderColor = 'var(--status-critical)';
+                     badgeClass = 'badge-breaking';
+                 } else if (isWarning) {
+                     borderColor = 'var(--status-warning)';
+                     badgeClass = 'badge-warning';
+                 }
+
+                 return (
+                     <div key={alert.id} className="card" style={{ borderLeft: `4px solid ${borderColor}` }}>
+                         <div className="flex items-center justify-between" style={{ marginBottom: '1rem' }}>
+                             <div className="flex items-center gap-2">
+                                <span className={`badge ${badgeClass}`}>! {alert.severity}</span>
+                                <span className="text-small">{formatDistanceToNow(new Date(alert.triggered_at), {addSuffix: true})}</span>
+                             </div>
+                             <Settings size={16} color="var(--text-tertiary)"/>
+                         </div>
+                         
+                         <h3 style={{ fontSize: '1.25rem', marginBottom: '0.75rem' }}>{alert.title}</h3>
+                         <p className="text-secondary" style={{ marginBottom: '1.5rem' }}>{alert.description || "Systemic threshold breached automatically. Details pending."}</p>
+                         
+                         <div className="flex items-center gap-2 text-small">
+                             <div style={{ width: '24px', height: '24px', borderRadius: '50%', backgroundColor: 'var(--text-secondary)' }}></div>
+                             <span style={{ fontWeight: 600 }}>{alert.alert_type} Monitoring System</span>
+                         </div>
+                     </div>
+                 );
+             })}
+
              <button className="btn btn-secondary" style={{ alignSelf: 'center', marginTop: '1rem' }}>Load Previous Alerts</button>
           </div>
 

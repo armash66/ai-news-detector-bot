@@ -1,6 +1,26 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { api, EventResponse } from '../api';
+import { formatDistanceToNow } from 'date-fns';
+import { Link } from 'react-router-dom';
 
 export const Home: React.FC = () => {
+  const [events, setEvents] = useState<EventResponse[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadEvents = async () => {
+      try {
+        const data = await api.getEvents(20, 'significance_score');
+        setEvents(data);
+      } catch (err) {
+        console.error("Failed to load events:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadEvents();
+  }, []);
+
   return (
     <div className="scrollarea">
       <div className="flex items-center justify-between" style={{ marginBottom: '2rem' }}>
@@ -37,55 +57,57 @@ export const Home: React.FC = () => {
 
       <div style={{ display: 'flex', gap: '2rem' }}>
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-            {/* Break Card */}
-            <div className="card" style={{ borderLeft: '4px solid var(--status-critical)', position: 'relative' }}>
-                <div className="flex items-center gap-2" style={{ marginBottom: '1rem' }}>
-                    <span className="badge badge-breaking">BREAKING</span>
-                    <span className="text-small">14m ago</span>
-                </div>
-                <h2 style={{ marginBottom: '0.75rem' }}>Global Supply Chain Disruptions Intensify Amid Strategic Port Closure in Southeast Asia</h2>
-                <p style={{ marginBottom: '1.5rem' }}>Critical logistical hubs report a 40% decrease in container throughput as regional tensions lead to temporary suspension of operations. Analysts predict immediate impacts on consumer electronics pricing.</p>
-                
-                <div className="flex items-center gap-6">
-                    <div className="flex items-center gap-2 text-small">
-                        <div className="flex" style={{ marginLeft: '0.5rem' }}>
-                             {/* Mock Avatars */}
-                            <div style={{ width: '24px', height: '24px', borderRadius: '50%', backgroundColor: 'var(--primary)', border: '2px solid white', marginLeft: '-0.5rem' }}></div>
-                            <div style={{ width: '24px', height: '24px', borderRadius: '50%', backgroundColor: 'var(--status-info)', border: '2px solid white', marginLeft: '-0.5rem' }}></div>
-                        </div>
-                        32 Sources Tracked
-                    </div>
-                    <div className="flex items-center gap-2 text-small font-bold" style={{ fontWeight: 700, color: 'var(--primary)' }}>
-                        CREDIBILITY 
-                        <div className="progress-bar-container"><div className="progress-bar-fill" style={{ width: '92%' }}></div></div>
-                        92%
-                    </div>
-                </div>
-            </div>
+            
+            {loading && <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-secondary)' }}>Gathering Intelligence...</div>}
+            
+            {!loading && events.length === 0 && (
+                <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-secondary)' }}>No live events detected currently. Check backend ingestion.</div>
+            )}
 
-            {/* Trending Card */}
-            <div className="card" style={{ borderLeft: '4px solid var(--primary)', position: 'relative' }}>
-                <div className="flex items-center gap-2" style={{ marginBottom: '1rem' }}>
-                    <span className="badge badge-trending">TRENDING</span>
-                    <span className="text-small">2h ago</span>
-                </div>
-                <h2 style={{ marginBottom: '0.75rem' }}>Breakthrough in Solid-State Battery Tech Promises 1,000 Mile EV Range</h2>
-                <p style={{ marginBottom: '1.5rem' }}>A major automotive conglomerate unveils prototype high-density cells that eliminate thermal runaway risks. Industry experts suggest mass production could begin by late 2026.</p>
+            {!loading && events.map((ev, index) => {
+                const isCritical = ev.significance_score > 0.8 || ev.status === 'BREAKING';
+                const borderColor = isCritical ? 'var(--status-critical)' : 'var(--primary)';
+                const badgeClass = isCritical ? 'badge-breaking' : 'badge-trending';
+                const label = isCritical ? 'BREAKING' : 'TRENDING';
                 
-                <div className="flex items-center gap-6">
-                    <div className="flex items-center gap-2 text-small">
-                        <div className="flex" style={{ marginLeft: '0.5rem' }}>
-                            <div style={{ width: '24px', height: '24px', borderRadius: '50%', backgroundColor: 'var(--status-info)', border: '2px solid white', marginLeft: '-0.5rem' }}></div>
+                return (
+                    <div key={ev.id} className="card" style={{ borderLeft: `4px solid ${borderColor}`, position: 'relative' }}>
+                        <div className="flex items-center gap-2" style={{ marginBottom: '1rem' }}>
+                            <span className={`badge ${badgeClass}`}>{label}</span>
+                            <span className="text-small">{formatDistanceToNow(new Date(ev.first_seen_at), {addSuffix: true})}</span>
+                            {ev.category !== 'GENERAL' && (
+                                <span className="badge badge-analysis" style={{ marginLeft: 'auto' }}>{ev.category}</span>
+                            )}
                         </div>
-                        18 Sources Tracked
+                        
+                        <Link to={`/briefing?id=${ev.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+                            <h2 style={{ marginBottom: '0.75rem' }}>{ev.title}</h2>
+                        </Link>
+                        
+                        <p style={{ marginBottom: '1.5rem', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                            {ev.summary || "Incoming intelligence report currently processing. Summary generation pending."}
+                        </p>
+                        
+                        <div className="flex items-center gap-6">
+                            <div className="flex items-center gap-2 text-small">
+                                <div className="flex" style={{ marginLeft: '0.5rem' }}>
+                                    {/* Mock Avatars */}
+                                    <div style={{ width: '24px', height: '24px', borderRadius: '50%', backgroundColor: 'var(--primary)', border: '2px solid white', marginLeft: '-0.5rem' }}></div>
+                                    <div style={{ width: '24px', height: '24px', borderRadius: '50%', backgroundColor: 'var(--status-info)', border: '2px solid white', marginLeft: '-0.5rem' }}></div>
+                                </div>
+                                {ev.article_count} Articles Tracked
+                            </div>
+                            <div className="flex items-center gap-2 text-small font-bold" style={{ fontWeight: 700, color: 'var(--primary)' }}>
+                                CREDIBILITY 
+                                <div className="progress-bar-container">
+                                    <div className="progress-bar-fill" style={{ width: `${Math.round(ev.trust_score * 100)}%` }}></div>
+                                </div>
+                                {Math.round(ev.trust_score * 100)}%
+                            </div>
+                        </div>
                     </div>
-                    <div className="flex items-center gap-2 text-small font-bold" style={{ fontWeight: 700, color: 'var(--primary)' }}>
-                        CREDIBILITY 
-                        <div className="progress-bar-container"><div className="progress-bar-fill" style={{ width: '85%' }}></div></div>
-                        85%
-                    </div>
-                </div>
-            </div>
+                );
+            })}
             
             <button className="btn btn-secondary" style={{ alignSelf: 'center', marginTop: '1rem' }}>Load More Intelligence</button>
         </div>
