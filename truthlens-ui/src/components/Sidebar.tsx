@@ -4,7 +4,7 @@ import { Home, Search, Bell, BarChart2, Settings, HelpCircle, ShieldCheck } from
 
 export const Sidebar: React.FC = () => {
   const navItems = [
-    { name: 'Event Feed', path: '/', icon: Home },
+    { name: 'Event Feed', path: '/feed', icon: Home },
     { name: 'Intelligence', path: '/intelligence', icon: Search },
     { name: 'Alerts', path: '/alerts', icon: Bell },
     { name: 'Analytics', path: '/analytics', icon: BarChart2 },

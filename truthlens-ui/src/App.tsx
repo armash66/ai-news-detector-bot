@@ -1,20 +1,25 @@
 import React from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, useLocation } from 'react-router-dom';
 import { Sidebar } from './components/Sidebar';
-import { Home } from './pages/Home.tsx';
-import { Intelligence } from './pages/Intelligence.tsx';
-import { Alerts } from './pages/Alerts.tsx';
-import { Analytics } from './pages/Analytics.tsx';
-import { Briefing } from './pages/Briefing.tsx';
-import { Analyze } from './pages/Analyze.tsx';
+import { Landing } from './pages/Landing';
+import { Feed } from './pages/Feed';
+import { Intelligence } from './pages/Intelligence';
+import { Alerts } from './pages/Alerts';
+import { Analytics } from './pages/Analytics';
+import { Briefing } from './pages/Briefing';
+import { Analyze } from './pages/Analyze';
 
 export const App: React.FC = () => {
+  const location = useLocation();
+  const isLanding = location.pathname === '/';
+
   return (
     <div className="app-container">
-      <Sidebar />
-      <main className="main-content">
+      {!isLanding && <Sidebar />}
+      <main className="main-content" style={{ overflowY: isLanding ? 'auto' : 'hidden' }}>
         <Routes>
-          <Route path="/" element={<Home />} />
+          <Route path="/" element={<Landing />} />
+          <Route path="/feed" element={<Feed />} />
           <Route path="/intelligence" element={<Intelligence />} />
           <Route path="/alerts" element={<Alerts />} />
           <Route path="/analytics" element={<Analytics />} />
